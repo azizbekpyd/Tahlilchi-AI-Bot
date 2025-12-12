@@ -28,14 +28,21 @@ bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-# Admin ID
-ADMIN_ID = os.getenv('ADMIN_ID')
-if ADMIN_ID:
+# Admin ID lar (vergul bilan ajratilgan)
+ADMIN_IDS = []
+admin_ids_str = os.getenv('ADMIN_ID', '')
+if admin_ids_str:
     try:
-        ADMIN_ID = int(ADMIN_ID)
-    except ValueError:
-        ADMIN_ID = None
-        logger.warning("ADMIN_ID noto'g'ri formatda. Butun son bo'lishi kerak.")
+        # Vergul bilan ajratilgan ID larni ajratish
+        admin_ids_list = [id.strip() for id in admin_ids_str.split(',')]
+        ADMIN_IDS = [int(admin_id) for admin_id in admin_ids_list if admin_id]
+        if ADMIN_IDS:
+            logger.info(f"Yuklangan admin ID lar: {ADMIN_IDS}")
+        else:
+            logger.warning("ADMIN_ID bo'sh yoki noto'g'ri formatda.")
+    except ValueError as e:
+        ADMIN_IDS = []
+        logger.warning(f"ADMIN_ID noto'g'ri formatda. Butun sonlar bo'lishi kerak. Xatolik: {e}")
 
 # File ID larni saqlash uchun JSON fayl
 FILE_IDS_JSON = 'file_ids.json'
@@ -54,9 +61,9 @@ class AdminState(StatesGroup):
 # Yordamchi funksiyalar
 def is_admin(user_id: int) -> bool:
     """Foydalanuvchi admin ekanligini tekshirish"""
-    if not ADMIN_ID:
+    if not ADMIN_IDS:
         return False
-    return user_id == ADMIN_ID
+    return user_id in ADMIN_IDS
 
 
 def load_file_ids() -> dict:
